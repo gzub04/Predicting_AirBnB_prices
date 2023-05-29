@@ -3,9 +3,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
-from imblearn.over_sampling import SMOTE
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler, OrdinalEncoder
+from sklearn.compose import ColumnTransformer
+#from imblearn.over_sampling import SMOTE
 import numpy as np
 import pandas as pd
+
 
 
 RANDOM_SEED = 52
@@ -43,8 +47,13 @@ def main():
     random_forest_regression = RandomForestRegressor(
         max_depth=MAX_DEPTH, min_impurity_decrease=MIN_IMPURITY_DECREASE, random_state=RANDOM_SEED)
     random_forest_regression.fit(x_train, y_train)
-    print(f'{random_forest_regression.score(x_test, y_test)}')
+    print(f'random forest score = {random_forest_regression.score(x_test, y_test)}')
 
+    # linear regression
+    linear_regression = LinearRegression()
+    linear_regression.fit(x_train, y_train)
+
+    print(f'linear regression score = {linear_regression.score(x_test, y_test)}')
 
 if __name__ == '__main__':
     main()
