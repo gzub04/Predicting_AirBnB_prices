@@ -1,10 +1,12 @@
-from random import random
+from numpy import random
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 import pandas as pd
 
 
 RANDOM_SEED = 41
+MAX_DEPTH = 3
 
 
 def split_data(dataset):
