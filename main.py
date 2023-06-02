@@ -2,17 +2,16 @@ from numpy import random
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.compose import ColumnTransformer
-#from imblearn.over_sampling import SMOTE
+from sklearn.metrics import mean_squared_error
 import numpy as np
 import pandas as pd
 
 
 
-RANDOM_SEED = 52
+RANDOM_SEED = 51
 
 # random forest parameters
 MAX_DEPTH = None
@@ -29,13 +28,18 @@ def split_data(dataset):
 
     numerical_transformer = StandardScaler()
     non_numerical_transformer = OrdinalEncoder()
-    preprocressor = ColumnTransformer(transformers=[
+    preprocessor = ColumnTransformer(transformers=[
         ('num', numerical_transformer, numerical_columns),
         ('cat', non_numerical_transformer, non_numerical_columns)
     ])
-    preprocessed_x = preprocressor.fit_transform(x)
+    preprocessed_x = preprocessor.fit_transform(x)
 
     return train_test_split(preprocessed_x, y, test_size=.2, random_state=RANDOM_SEED)
+
+
+def root_squared_mean_error(regressor, x_test, y_test):
+    y_pred = regressor.predict(x_test)
+    return np.sqrt(mean_squared_error(y_test, y_pred))
 
 
 def main():
@@ -47,13 +51,16 @@ def main():
     random_forest_regression = RandomForestRegressor(
         max_depth=MAX_DEPTH, min_impurity_decrease=MIN_IMPURITY_DECREASE, random_state=RANDOM_SEED)
     random_forest_regression.fit(x_train, y_train)
-    print(f'random forest score = {random_forest_regression.score(x_test, y_test)}')
 
     # linear regression
     linear_regression = LinearRegression()
     linear_regression.fit(x_train, y_train)
 
-    print(f'linear regression score = {linear_regression.score(x_test, y_test)}')
+    print(f'Random forest score from scikit-learn = {random_forest_regression.score(x_test, y_test)}')
+    print(f'Linear regression score from scikit-learn = {linear_regression.score(x_test, y_test)}')
+    print(f'Random forest RMSE = {root_squared_mean_error(random_forest_regression, x_test, y_test)}')
+    print(f'Linear regression RMSE = {root_squared_mean_error(linear_regression, x_test, y_test)}')
+
 
 if __name__ == '__main__':
     main()
