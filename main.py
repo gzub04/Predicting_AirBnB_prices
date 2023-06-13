@@ -11,7 +11,7 @@ import pandas as pd
 
 
 
-RANDOM_SEED = 51
+# RANDOM_SEED = 52
 
 # random forest parameters
 MAX_DEPTH = None
@@ -23,7 +23,7 @@ def split_data(dataset):
     y = dataset.iloc[:, 1].values
 
     # preprocess data
-    numerical_columns = [3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    numerical_columns = [3]
     non_numerical_columns = [0, 1, 2, 4]
 
     numerical_transformer = StandardScaler()
@@ -34,7 +34,7 @@ def split_data(dataset):
     ])
     preprocessed_x = preprocessor.fit_transform(x)
 
-    return train_test_split(preprocessed_x, y, test_size=.2, random_state=RANDOM_SEED)
+    return train_test_split(preprocessed_x, y, test_size=.2)  # random_state=RANDOM_SEED)
 
 
 def root_squared_mean_error(regressor, x_test, y_test):
@@ -43,13 +43,13 @@ def root_squared_mean_error(regressor, x_test, y_test):
 
 
 def main():
-    random.seed(RANDOM_SEED)
+    # random.seed(RANDOM_SEED)
     df = pd.read_csv('Datasets/london_weekends.csv')
     x_train, x_test, y_train, y_test = split_data(df)
 
     # random forest regression
     random_forest_regression = RandomForestRegressor(
-        max_depth=MAX_DEPTH, min_impurity_decrease=MIN_IMPURITY_DECREASE, random_state=RANDOM_SEED)
+        max_depth=MAX_DEPTH, min_impurity_decrease=MIN_IMPURITY_DECREASE)  # , random_state=RANDOM_SEED)
     random_forest_regression.fit(x_train, y_train)
 
     # linear regression
@@ -60,8 +60,13 @@ def main():
     print(f'Linear regression score from scikit-learn = {linear_regression.score(x_test, y_test)}')
     print(f'Random forest RMSE = {root_squared_mean_error(random_forest_regression, x_test, y_test)}')
     print(f'Linear regression RMSE = {root_squared_mean_error(linear_regression, x_test, y_test)}')
+    return random_forest_regression.score(x_test, y_test)
 
 
 if __name__ == '__main__':
-    main()
-
+    sum_of_scores = 0
+    num_of_iterations = 40
+    for i in range(num_of_iterations):
+        sum_of_scores += main()
+    average = sum_of_scores/num_of_iterations
+    print(average)
