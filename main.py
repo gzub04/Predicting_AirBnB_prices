@@ -1,7 +1,7 @@
 import sys
 from numpy import random
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
@@ -12,12 +12,19 @@ import pandas as pd
 import glob
 
 
-
-# RANDOM_SEED = 52
+NUM_OF_ITERATIONS = 50  # how many times should each ML algorithm be run
 
 # random forest parameters
 MAX_DEPTH = None
 MIN_IMPURITY_DECREASE = 0.05
+
+# gradient boosting parameters
+N_ESTIMATORS_GRADIENT = 100
+MAX_DEPTH_GRADIENT = 5
+MIN_SAMPLES_SPLIT_GRADIENT = 10
+LEARNING_RATE_GRADIENT = 0.1
+LOSS_GRADIENT = "squared_error"
+
 
 
 def split_data(dataset):
@@ -66,30 +73,40 @@ def run_algorithms(df):
     linear_regression = LinearRegression()
     linear_regression.fit(x_train, y_train)
 
+    gradient_boosting_regressor = GradientBoostingRegressor(max_depth=MAX_DEPTH_GRADIENT,
+                                                            n_estimators=N_ESTIMATORS_GRADIENT,
+                                                            learning_rate=LEARNING_RATE_GRADIENT, loss=LOSS_GRADIENT,
+                                                            min_samples_split=MIN_SAMPLES_SPLIT_GRADIENT)
+    gradient_boosting_regressor.fit(x_train, y_train)
+
     # print(f'Random forest score from scikit-learn = {random_forest_regression.score(x_test, y_test)}')
     # print(f'Linear regression score from scikit-learn = {linear_regression.score(x_test, y_test)}')
     # print(f'Random forest RMSE = {root_squared_mean_error(random_forest_regression, x_test, y_test)}')
     # print(f'Linear regression RMSE = {root_squared_mean_error(linear_regression, x_test, y_test)}')
-    return [random_forest_regression.score(x_test, y_test), linear_regression.score(x_test, y_test)]
+    return [random_forest_regression.score(x_test, y_test), linear_regression.score(x_test, y_test),
+            gradient_boosting_regressor.score(x_test, y_test)]
 
 
 def main():
     df = load_files()
     sum_random_forest = 0
     sum_linear = 0
-    num_of_iterations = 10
-    for i in range(num_of_iterations):
-        progress = f"Progress: {i}/{num_of_iterations}"
+    sum_gradient_boosting = 0
+    for i in range(NUM_OF_ITERATIONS):
+        progress = f"Progress: {i}/{NUM_OF_ITERATIONS}"
         sys.stdout.write('\r' + progress)
         sys.stdout.flush()
         results = run_algorithms(df)
         sum_random_forest += results[0]
         sum_linear += results[1]
-    sys.stdout.write('\r' + f'Progress: {num_of_iterations}/{num_of_iterations}\n')
-    average_random_forest = sum_random_forest / num_of_iterations
-    average_linear = sum_linear / num_of_iterations
+        sum_gradient_boosting += results[2]
+    sys.stdout.write('\r' + f'Progress: {NUM_OF_ITERATIONS}/{NUM_OF_ITERATIONS}\n')
+    average_random_forest = sum_random_forest / NUM_OF_ITERATIONS
+    average_linear = sum_linear / NUM_OF_ITERATIONS
+    average_gradient_boosting = sum_gradient_boosting / NUM_OF_ITERATIONS
     print(f'Average of scores from scikit-learn for Random Forest = {average_random_forest}')
     print(f'Average of scores from scikit-learn for Linear Regression = {average_linear}')
+    print(f'Average of scores from scikit-learn for Gradient Boosting = {average_gradient_boosting}')
 
 
 if __name__ == '__main__':
