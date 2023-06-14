@@ -1,6 +1,7 @@
+import sys
 from numpy import random
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
@@ -8,6 +9,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import mean_squared_error
 import numpy as np
 import pandas as pd
+import glob
 
 
 
@@ -16,13 +18,6 @@ import pandas as pd
 # random forest parameters
 MAX_DEPTH = None
 MIN_IMPURITY_DECREASE = 0.05
-
-# gradient boositng parameters
-N_ESTIMATORS_GRADIENT = 100
-MAX_DEPTH_GRADIENT = 5
-MIN_SAMPLES_SPLIT_GRADIENT = 10
-LEARNING_RATE_GRADIENT=  0.1
-LOSS_GRADIENT = "squared_error"
 
 
 def split_data(dataset):
@@ -49,9 +44,17 @@ def root_squared_mean_error(regressor, x_test, y_test):
     return np.sqrt(mean_squared_error(y_test, y_pred))
 
 
-def main():
+def load_files():
+    file_list = glob.glob("Datasets/*.csv")
+    dataframes = []
+    for file in file_list:
+        df = pd.read_csv(file)
+        dataframes.append(df)
+    return pd.concat(dataframes, ignore_index=True)
 
-    df = pd.read_csv('Datasets/london_weekends.csv')
+
+def run_algorithms(df):
+
     x_train, x_test, y_train, y_test = split_data(df)
 
     # random forest regression
@@ -63,23 +66,31 @@ def main():
     linear_regression = LinearRegression()
     linear_regression.fit(x_train, y_train)
 
-    #gradient boosting regression
-    gradient_boositing_regressor = GradientBoostingRegressor(max_depth=MAX_DEPTH_GRADIENT, n_estimators=N_ESTIMATORS_GRADIENT, learning_rate=LEARNING_RATE_GRADIENT,loss=LOSS_GRADIENT,min_samples_split=MIN_SAMPLES_SPLIT_GRADIENT)
-    gradient_boositing_regressor.fit(x_train, y_train)
+    # print(f'Random forest score from scikit-learn = {random_forest_regression.score(x_test, y_test)}')
+    # print(f'Linear regression score from scikit-learn = {linear_regression.score(x_test, y_test)}')
+    # print(f'Random forest RMSE = {root_squared_mean_error(random_forest_regression, x_test, y_test)}')
+    # print(f'Linear regression RMSE = {root_squared_mean_error(linear_regression, x_test, y_test)}')
+    return [random_forest_regression.score(x_test, y_test), linear_regression.score(x_test, y_test)]
 
-    print(f'Random forest score from scikit-learn = {random_forest_regression.score(x_test, y_test)}')
-    print(f'Linear regression score from scikit-learn = {linear_regression.score(x_test, y_test)}')
-    print(f'Gradient boosting score from scikit-learn = {gradient_boositing_regressor.score(x_test, y_test)}')
-    print(f'Random forest RMSE = {root_squared_mean_error(random_forest_regression, x_test, y_test)}')
-    print(f'Linear regression RMSE = {root_squared_mean_error(linear_regression, x_test, y_test)}')
-    print(f'Gradient boosting RMSE = {root_squared_mean_error(gradient_boositing_regressor, x_test, y_test)}')
-    return random_forest_regression.score(x_test, y_test)
+
+def main():
+    df = load_files()
+    sum_random_forest = 0
+    sum_linear = 0
+    num_of_iterations = 10
+    for i in range(num_of_iterations):
+        progress = f"Progress: {i}/{num_of_iterations}"
+        sys.stdout.write('\r' + progress)
+        sys.stdout.flush()
+        results = run_algorithms(df)
+        sum_random_forest += results[0]
+        sum_linear += results[1]
+    sys.stdout.write('\r' + f'Progress: {num_of_iterations}/{num_of_iterations}\n')
+    average_random_forest = sum_random_forest / num_of_iterations
+    average_linear = sum_linear / num_of_iterations
+    print(f'Average of scores from scikit-learn for Random Forest = {average_random_forest}')
+    print(f'Average of scores from scikit-learn for Linear Regression = {average_linear}')
 
 
 if __name__ == '__main__':
-    sum_of_scores = 0
-    num_of_iterations = 40
-    for i in range(num_of_iterations):
-        sum_of_scores += main()
-    average = sum_of_scores/num_of_iterations
-    print(average)
+    main()
