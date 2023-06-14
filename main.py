@@ -43,7 +43,7 @@ def root_squared_mean_error(regressor, x_test, y_test):
 
 
 def main():
-    # random.seed(RANDOM_SEED)
+
     df = pd.read_csv('Datasets/london_weekends.csv')
     x_train, x_test, y_train, y_test = split_data(df)
 
