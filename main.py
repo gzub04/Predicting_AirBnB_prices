@@ -1,8 +1,7 @@
+import os
 import sys
-from numpy import random
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.compose import ColumnTransformer
@@ -12,8 +11,7 @@ import pandas as pd
 import glob
 import matplotlib.pyplot as plt
 
-
-NUM_OF_ITERATIONS = 20  # how many times should each ML algorithm be run
+NUM_OF_ITERATIONS = 50  # how many times should each ML algorithm be run
 
 # random forest parameters
 MAX_DEPTH = None
@@ -26,16 +24,6 @@ MIN_SAMPLES_SPLIT_GRADIENT = 10
 LEARNING_RATE_GRADIENT = 0.1
 LOSS_GRADIENT = "squared_error"
 
-dataset_names = []
-
-forest_scores = []
-forest_scores_rms = []
-
-linear_scores = []
-linear_scores_rms = []
-
-gradient_scores = []
-gradient_scores_rms = []
 
 def split_data(dataset):
     x = dataset.iloc[:, 2:].values
@@ -56,23 +44,29 @@ def split_data(dataset):
     return train_test_split(preprocessed_x, y, test_size=.2)  # random_state=RANDOM_SEED)
 
 
-def root_squared_mean_error(regressor, x_test, y_test):
+def rmse(regressor, x_test, y_test):
+    # Returns root squared mean error
     y_pred = regressor.predict(x_test)
     return np.sqrt(mean_squared_error(y_test, y_pred))
+
+
+def mape(regressor, x_test, y_test):
+    # Returns mean absolute percentage error
+    y_pred = regressor.predict(x_test)
+    return np.mean(np.abs((y_test - y_pred) / y_test)) * 100
 
 
 def load_files():
     file_list = glob.glob("Datasets/*.csv")
     dataframes = []
     for file in file_list:
-        dataset_names.append(file.title())
         df = pd.read_csv(file)
+        df.name = os.path.basename(file).split(".")[0]
         dataframes.append(df)
     return dataframes
 
 
 def run_algorithms(df):
-
     x_train, x_test, y_train, y_test = split_data(df)
 
     # random forest regression
@@ -95,81 +89,125 @@ def run_algorithms(df):
     # print(f'Random forest RMSE = {root_squared_mean_error(random_forest_regression, x_test, y_test)}')
     # print(f'Linear regression RMSE = {root_squared_mean_error(linear_regression, x_test, y_test)}')
 
-    forest_scores.append(random_forest_regression.score(x_test, y_test))
-    linear_scores.append(linear_regression.score(x_test, y_test))
-    gradient_scores.append(gradient_boosting_regressor.score(x_test, y_test))
+    return [random_forest_regression.score(x_test, y_test), rmse(random_forest_regression, x_test, y_test),
+            mape(random_forest_regression, x_test, y_test),
+            linear_regression.score(x_test, y_test), rmse(linear_regression, x_test, y_test),
+            mape(linear_regression, x_test, y_test),
+            gradient_boosting_regressor.score(x_test, y_test), rmse(gradient_boosting_regressor, x_test, y_test),
+            mape(gradient_boosting_regressor, x_test, y_test)]
 
-    forest_scores_rms.append(root_squared_mean_error(random_forest_regression, x_test, y_test))
-    linear_scores_rms.append(root_squared_mean_error(linear_regression, x_test, y_test))
-    gradient_scores_rms.append(root_squared_mean_error(gradient_boosting_regressor, x_test, y_test))
 
-    return [random_forest_regression.score(x_test, y_test), linear_regression.score(x_test, y_test),
-            gradient_boosting_regressor.score(x_test, y_test)]
+def plot_scores(dataset_names, forest_r_squared, forest_scores_rms, forest_mape,
+                linear_r_squared, linear_scores_rms, linear_mape,
+                gradient_r_squared, gradient_scores_rms, gradient_mape):
 
-def plotScores():
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(8, 8))
     dataset_indexes = np.arange(len(dataset_names))
-    
-    #plt.xticks(dataset_indexes, dataset_names)
 
-    #ax = fig.add_subplot(211)
+    # plt.xticks(dataset_indexes, dataset_names)
 
-    ax.plot(dataset_indexes,forest_scores, "ob", label = "Random Forest")
-    ax.plot( dataset_indexes,linear_scores, "or", label = "Linear Regression")
-    ax.plot( dataset_indexes, gradient_scores, "og", label = "Gradient Boosting")
+    # ax = fig.add_subplot(211)
+
+    ax.plot(dataset_indexes, forest_r_squared, "ob", label="Random Forest")
+    ax.plot(dataset_indexes, linear_r_squared, "or", label="Linear Regression")
+    ax.plot(dataset_indexes, gradient_r_squared, "og", label="Gradient Boosting")
     ax.set_xticks(dataset_indexes)
     ax.set_xticklabels(dataset_names, rotation='vertical')
-    ax.set_title("Score")
-    ax.set_ylim(top = 1.0, bottom = 0)
+    ax.set_title("R^2 score")
+    ax.set_ylim(top=1.0, bottom=0)
     ax.margins(0.2)
-    #plt.xticks(dataset_indexes, dataset_names)
 
-    #ax = fig.add_subplot(211)
+    # plt.xticks(dataset_indexes, dataset_names)
+    # ax = fig.add_subplot(211)
 
-    ax2.plot(dataset_indexes,forest_scores_rms, "ob", label = "Random Forest")
-    ax2.plot( dataset_indexes,linear_scores_rms, "or", label = "Linear Regression")
-    ax2.plot( dataset_indexes, gradient_scores_rms, "og", label = "Gradient Boosting")
+    ax2.plot(dataset_indexes, forest_scores_rms, "ob", label="Random Forest")
+    ax2.plot(dataset_indexes, linear_scores_rms, "or", label="Linear Regression")
+    ax2.plot(dataset_indexes, gradient_scores_rms, "og", label="Gradient Boosting")
     ax2.set_xticks(dataset_indexes)
     ax2.set_xticklabels(dataset_names, rotation='vertical')
     ax2.set_title("RMSE")
     ax2.margins(0.2)
 
-    #plt.ylim(bottom = 0)
-    #plt.xticks(dataset_indexes,dataset_names,rotation='vertical')
-    #plt.legend(loc="upper right")
-    #plt.margins(0.2)
-    #plt.subplots_adjust(bottom=0.5)
+    # plt.ylim(bottom = 0)
+    # plt.xticks(dataset_indexes,dataset_names,rotation='vertical')
+    # plt.legend(loc="upper right")
+    # plt.margins(0.2)
+    # plt.subplots_adjust(bottom=0.5)
 
     plt.legend(loc="upper right")
-    #plt.margins(0.2)
+    # plt.margins(0.2)
     plt.subplots_adjust(bottom=0.5)
     plt.show()
 
 
+def print_results(scores):
+    """
+    Takes in a list of scores and prints out its average and standard variation, best and worst score
+    :param scores: List of metric scores
+    :return: None
+    """
+    print(f'Average: {np.mean(scores)}')
+    print(f'Standard variation: {np.std(scores)}')
+    print(f'Highest and lowest score: {max(scores), min(scores)}')
+
+
 def main():
-    df = load_files()
-    sum_random_forest = 0
-    sum_linear = 0
-    sum_gradient_boosting = 0
-    for i in range(NUM_OF_ITERATIONS):
-        progress = f"Progress: {i}/{NUM_OF_ITERATIONS}"
-        sys.stdout.write('\r' + progress)
-        sys.stdout.flush()
-        results = run_algorithms(df[i])
-        sum_random_forest += results[0]
-        sum_linear += results[1]
-        sum_gradient_boosting += results[2]
-    sys.stdout.write('\r' + f'Progress: {NUM_OF_ITERATIONS}/{NUM_OF_ITERATIONS}\n')
-    average_random_forest = sum_random_forest / NUM_OF_ITERATIONS
-    average_linear = sum_linear / NUM_OF_ITERATIONS
-    average_gradient_boosting = sum_gradient_boosting / NUM_OF_ITERATIONS
-    print(f'Average of scores from scikit-learn for Random Forest = {average_random_forest}')
-    print(f'Average of scores from scikit-learn for Linear Regression = {average_linear}')
-    print(f'Average of scores from scikit-learn for Gradient Boosting = {average_gradient_boosting}')
-    plotScores()
+    dfs = load_files()
+
+    algorithm_names = ['Random forest', 'Linear', 'Gradient boosting']
+    metric_names = ['r_squared', 'rmse', 'mape']
+    general_scores = {
+        'Random forest': {'r_squared': [], 'rmse': [], 'mape': []},
+        'Linear': {'r_squared': [], 'rmse': [], 'mape': []},
+        'Gradient boosting': {'r_squared': [], 'rmse': [], 'mape': []}
+    }
+    dataset_names = []
+
+    for i, dataset in enumerate(dfs):
+        dataset_names.append(dataset.name)
+        scores_for_one_dataset = {
+            'Random forest': {'r_squared': [], 'rmse': [], 'mape': []},
+            'Linear': {'r_squared': [], 'rmse': [], 'mape': []},
+            'Gradient boosting': {'r_squared': [], 'rmse': [], 'mape': []}
+        }
+
+        for j in range(NUM_OF_ITERATIONS):
+            progress = f"Analysing {dataset.name} ({i+1}/{len(dfs)}): Progress: {j+1}/{NUM_OF_ITERATIONS}"
+            sys.stdout.write('\r' + progress)
+            sys.stdout.flush()
+
+            results = run_algorithms(dataset)
+            scores_for_one_dataset['Random forest']['r_squared'].append(results[0])
+            scores_for_one_dataset['Random forest']['rmse'].append(results[1])
+            scores_for_one_dataset['Random forest']['mape'].append(results[2])
+
+            scores_for_one_dataset['Linear']['r_squared'].append(results[3])
+            scores_for_one_dataset['Linear']['rmse'].append(results[4])
+            scores_for_one_dataset['Linear']['mape'].append(results[5])
+
+            scores_for_one_dataset['Gradient boosting']['r_squared'].append(results[6])
+            scores_for_one_dataset['Gradient boosting']['rmse'].append(results[7])
+            scores_for_one_dataset['Gradient boosting']['mape'].append(results[8])
+
+        for algorithm_name in algorithm_names:
+            for metric_name in metric_names:
+                general_scores[algorithm_name][metric_name].append(
+                    np.mean(scores_for_one_dataset[algorithm_name][metric_name]))
+
+    sys.stdout.write('\r')
+    for metric_name in metric_names:
+        print(f'{metric_name}:')
+        for algorithm_name in algorithm_names:
+            print(f'{algorithm_name}:')
+            print_results(general_scores[algorithm_name][metric_name])
+
+    plot_scores(dataset_names, general_scores['Random forest']['r_squared'], general_scores['Random forest']['rmse'],
+                general_scores['Random forest']['mape'],
+                general_scores['Linear']['r_squared'], general_scores['Linear']['rmse'],
+                general_scores['Linear']['mape'],
+                general_scores['Gradient boosting']['r_squared'], general_scores['Gradient boosting']['rmse'],
+                general_scores['Gradient boosting']['mape'])
 
 
 if __name__ == '__main__':
     main()
-
-
