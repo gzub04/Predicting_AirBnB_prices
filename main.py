@@ -11,7 +11,7 @@ import pandas as pd
 import glob
 import matplotlib.pyplot as plt
 
-NUM_OF_ITERATIONS = 50  # how many times should each ML algorithm be run
+NUM_OF_ITERATIONS = 1  # how many times should each ML algorithm be run
 
 # random forest parameters
 MAX_DEPTH = None
@@ -101,16 +101,16 @@ def plot_scores(dataset_names, forest_r_squared, forest_scores_rms, forest_mape,
                 linear_r_squared, linear_scores_rms, linear_mape,
                 gradient_r_squared, gradient_scores_rms, gradient_mape):
 
-    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(8, 8))
+    fig, (ax, ax2, ax3) = plt.subplots(1, 3, figsize=(8, 8))
     dataset_indexes = np.arange(len(dataset_names))
 
     # plt.xticks(dataset_indexes, dataset_names)
 
     # ax = fig.add_subplot(211)
 
-    ax.plot(dataset_indexes, forest_r_squared, "ob", label="Random Forest")
-    ax.plot(dataset_indexes, linear_r_squared, "or", label="Linear Regression")
-    ax.plot(dataset_indexes, gradient_r_squared, "og", label="Gradient Boosting")
+    ax.plot(dataset_indexes, forest_r_squared, "ob-", label="Random Forest")
+    ax.plot(dataset_indexes, linear_r_squared, "or-", label="Linear Regression")
+    ax.plot(dataset_indexes, gradient_r_squared, "og-", label="Gradient Boosting")
     ax.set_xticks(dataset_indexes)
     ax.set_xticklabels(dataset_names, rotation='vertical')
     ax.set_title("R^2 score")
@@ -120,13 +120,21 @@ def plot_scores(dataset_names, forest_r_squared, forest_scores_rms, forest_mape,
     # plt.xticks(dataset_indexes, dataset_names)
     # ax = fig.add_subplot(211)
 
-    ax2.plot(dataset_indexes, forest_scores_rms, "ob", label="Random Forest")
-    ax2.plot(dataset_indexes, linear_scores_rms, "or", label="Linear Regression")
-    ax2.plot(dataset_indexes, gradient_scores_rms, "og", label="Gradient Boosting")
+    ax2.plot(dataset_indexes, forest_scores_rms, "ob-", label="Random Forest")
+    ax2.plot(dataset_indexes, linear_scores_rms, "or-", label="Linear Regression")
+    ax2.plot(dataset_indexes, gradient_scores_rms, "og-", label="Gradient Boosting")
     ax2.set_xticks(dataset_indexes)
     ax2.set_xticklabels(dataset_names, rotation='vertical')
     ax2.set_title("RMSE")
     ax2.margins(0.2)
+
+    ax3.plot(dataset_indexes, forest_mape, "ob-", label="Random Forest")
+    ax3.plot(dataset_indexes, linear_mape, "or-", label="Linear Regression")
+    ax3.plot(dataset_indexes, gradient_mape, "og-", label="Gradient Boosting")
+    ax3.set_xticks(dataset_indexes)
+    ax3.set_xticklabels(dataset_names, rotation='vertical')
+    ax3.set_title("MAPE")
+    ax3.margins(0.2)
 
     # plt.ylim(bottom = 0)
     # plt.xticks(dataset_indexes,dataset_names,rotation='vertical')
@@ -134,8 +142,13 @@ def plot_scores(dataset_names, forest_r_squared, forest_scores_rms, forest_mape,
     # plt.margins(0.2)
     # plt.subplots_adjust(bottom=0.5)
 
-    plt.legend(loc="upper right")
+    # ax.legend(loc='upper center', bbox_to_anchor=(1.1, 1.05))
+    # ax2.legend(loc='upper center', bbox_to_anchor=(1.1, 1.05))
+    # ax3.legend(loc='upper center', bbox_to_anchor=(1.1, 1.05))
     # plt.margins(0.2)
+
+    fig.legend(labels = ['Random Forest', 'Linear Regression','Gradient Boosting' ], loc='upper center', ncol=3)
+
     plt.subplots_adjust(bottom=0.5)
     plt.show()
 
