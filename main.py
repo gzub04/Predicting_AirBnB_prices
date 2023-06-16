@@ -11,7 +11,7 @@ import pandas as pd
 import glob
 import matplotlib.pyplot as plt
 
-NUM_OF_ITERATIONS = 1  # how many times should each ML algorithm be run
+NUM_OF_ITERATIONS = 50  # how many times should each ML algorithm be run
 
 # random forest parameters
 MAX_DEPTH = None
@@ -84,11 +84,6 @@ def run_algorithms(df):
                                                             min_samples_split=MIN_SAMPLES_SPLIT_GRADIENT)
     gradient_boosting_regressor.fit(x_train, y_train)
 
-    # print(f'Random forest score from scikit-learn = {random_forest_regression.score(x_test, y_test)}')
-    # print(f'Linear regression score from scikit-learn = {linear_regression.score(x_test, y_test)}')
-    # print(f'Random forest RMSE = {root_squared_mean_error(random_forest_regression, x_test, y_test)}')
-    # print(f'Linear regression RMSE = {root_squared_mean_error(linear_regression, x_test, y_test)}')
-
     return [random_forest_regression.score(x_test, y_test), rmse(random_forest_regression, x_test, y_test),
             mape(random_forest_regression, x_test, y_test),
             linear_regression.score(x_test, y_test), rmse(linear_regression, x_test, y_test),
@@ -104,10 +99,6 @@ def plot_scores(dataset_names, forest_r_squared, forest_scores_rms, forest_mape,
     fig, (ax, ax2, ax3) = plt.subplots(1, 3, figsize=(8, 8))
     dataset_indexes = np.arange(len(dataset_names))
 
-    # plt.xticks(dataset_indexes, dataset_names)
-
-    # ax = fig.add_subplot(211)
-
     ax.plot(dataset_indexes, forest_r_squared, "ob", label="Random Forest")
     ax.plot(dataset_indexes, linear_r_squared, "or", label="Linear Regression")
     ax.plot(dataset_indexes, gradient_r_squared, "og", label="Gradient Boosting")
@@ -117,9 +108,6 @@ def plot_scores(dataset_names, forest_r_squared, forest_scores_rms, forest_mape,
     ax.set_ylim(top=1.0, bottom=0)
     ax.margins(0.2)
     ax.grid()
-
-    # plt.xticks(dataset_indexes, dataset_names)
-    # ax = fig.add_subplot(211)
 
     ax2.plot(dataset_indexes, forest_scores_rms, "ob", label="Random Forest")
     ax2.plot(dataset_indexes, linear_scores_rms, "or", label="Linear Regression")
@@ -139,29 +127,13 @@ def plot_scores(dataset_names, forest_r_squared, forest_scores_rms, forest_mape,
     ax3.margins(0.2)
     ax3.grid()
 
-
     ax.set_xlim(0, len(dataset_indexes)-1)
     ax2.set_xlim(0, len(dataset_indexes)-1)
     ax3.set_xlim(0, len(dataset_indexes)-1)
 
-    # plt.ylim(bottom = 0)
-    # plt.xticks(dataset_indexes,dataset_names,rotation='vertical')
-    # plt.legend(loc="upper right")
-    # plt.margins(0.2)
-    # plt.subplots_adjust(bottom=0.5)
-
-    # ax.legend(loc='upper center', bbox_to_anchor=(1.1, 1.05))
-    # ax2.legend(loc='upper center', bbox_to_anchor=(1.1, 1.05))
-    # ax3.legend(loc='upper center', bbox_to_anchor=(1.1, 1.05))
-    # plt.margins(0.2)
-
-    fig.legend(labels = ['Random Forest', 'Linear Regression','Gradient Boosting' ], loc='upper center', ncol=3)
+    fig.legend(labels=['Random Forest', 'Linear Regression', 'Gradient Boosting'], loc='upper center', ncol=3)
 
     plt.subplots_adjust(bottom=0.5)
-
-    # plt.setp(ax.get_xticklabels(), horizontalalignment='right')
-    # plt.setp(ax2.get_xticklabels(), horizontalalignment='right')
-    # plt.setp(ax3.get_xticklabels(), horizontalalignment='right')
 
     plt.show()
 
